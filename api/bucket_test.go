@@ -3,17 +3,17 @@ package api
 import (
 	"fmt"
 	"os"
-	"purge/assert"
 	"testing"
 )
 
 func TestUpyun_Buckets(t *testing.T) {
 	upyun := NewUpyun(UpyunConfig{
-		Authorization: os.Getenv("api-upyun-test-auth"),
+		Authorization: os.Getenv("api_upyun_bucket"),
 	})
-	resp, err := upyun.Buckets(BucketParams{
-		Limit: 10000,
-	})
-	assert.Equal(t, nil, err)
-	fmt.Println(resp)
+	domains, err := upyun.BucketDomains()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(domains)
+	fmt.Println(len(domains))
 }

@@ -3,6 +3,7 @@ package api
 import (
 	"io"
 	"net/http"
+	"strings"
 )
 
 type Upyun struct {
@@ -11,9 +12,9 @@ type Upyun struct {
 }
 
 type Pager struct {
-	Since interface{} `json:"since"`
-	Max   int         `json:"max"`
-	Limit int         `json:"limit"`
+	Since any `json:"since"`
+	Max   int `json:"max"`
+	Limit int `json:"limit"`
 }
 
 func (u Upyun) Get(url string, body io.Reader) ([]byte, error) {
@@ -40,6 +41,9 @@ type UpyunConfig struct {
 }
 
 func NewUpyun(config UpyunConfig) Upyun {
+	if !strings.HasPrefix(config.Authorization, "Bearer") {
+		config.Authorization = "Bearer " + config.Authorization
+	}
 	if len(config.Host) == 0 {
 		config.Host = "https://api.upyun.com"
 	}

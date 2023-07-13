@@ -4,47 +4,55 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
-type BucketParams struct {
-	Limit int `json:"limit"`
+// BucketDomains https://api.upyun.com/doc#/api/operation/bucket/GET%20%2Fbuckets
+func (u Upyun) BucketDomains() (res []DomainInfo, err error) {
+	url := fmt.Sprintf("%s/buckets?limit=100", u.host)
+	for {
+		resp, _err := u.bucketDomains(url)
+		if _err != nil {
+			return nil, _err
+		}
+		for _, bucket := range resp.Buckets {
+			for _, dm := range bucket.Domains {
+				if strings.HasSuffix(dm.Domain, "test.upcdn.net") {
+					continue
+				}
+				res = append(res, dm)
+			}
+		}
+		if resp.Pager.Max == 0 {
+			return
+		}
+		url = fmt.Sprintf("%s/buckets?limit=100&max=%d", u.host, resp.Pager.Max)
+	}
 }
 
-type BucketResponse struct {
-	Buckets []Bucket `json:"buckets"`
-	Pager   Pager    `json:"pager"`
+type respBucketDomains struct {
+	Pager   Pager        `json:"pager"`
+	Buckets []BucketInfo `json:"buckets"`
 }
 
-// todo add other fields
-type Bucket struct {
-	Domains []Domain `json:"domains"`
+type BucketInfo struct {
+	Domains []DomainInfo `json:"domains"`
 }
 
-type Domain struct {
+type DomainInfo struct {
 	Domain string `json:"domain"`
 	Status string `json:"status"`
 }
 
-func (u Upyun) url(params BucketParams) string {
-	if params.Limit == 0 {
-		return fmt.Sprintf("%s/buckets?limit=%d", u.host, 100)
-	}
-	return fmt.Sprintf("%s/buckets?limit=%d", u.host, params.Limit)
-}
-
-// document: https://api.upyun.com/doc#/api/operation/domain/GET%20%2Fbuckets%2Fdomains
-func (u Upyun) Buckets(params BucketParams) (*BucketResponse, error) {
-	bytes, err := u.Get(u.url(params), nil)
+func (u Upyun) bucketDomains(url string) (*respBucketDomains, error) {
+	bytes, err := u.Get(url, nil)
 	if err != nil {
 		return nil, err
 	}
-	var response BucketResponse
+	var response respBucketDomains
 	err = json.Unmarshal(bytes, &response)
 	if err != nil {
 		return nil, err
-	}
-	if len(response.Buckets) == 0 {
-		return nil, fmt.Errorf("%s", string(bytes))
 	}
 	return &response, nil
 }
