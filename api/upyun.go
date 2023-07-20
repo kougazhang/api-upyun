@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -18,7 +19,7 @@ type Pager struct {
 }
 
 func (u Upyun) Get(url string, body io.Reader) ([]byte, error) {
-	return u.Request("GET", url, body)
+	return u.Request(http.MethodGet, url, body)
 }
 
 func (u Upyun) Request(method, url string, body io.Reader) ([]byte, error) {
@@ -32,6 +33,13 @@ func (u Upyun) Request(method, url string, body io.Reader) ([]byte, error) {
 		return nil, err
 	}
 	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(response.Body)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf(string(body))
+	}
 	return io.ReadAll(response.Body)
 }
 

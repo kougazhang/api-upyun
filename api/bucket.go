@@ -1,4 +1,4 @@
-// https://api.upyun.com/doc#/api/operation/domain/GET%20%2Fbuckets%2Fdomains
+// Package api https://api.upyun.com/doc#/api/operation/bucket/GET%20%2Fbuckets
 package api
 
 import (
